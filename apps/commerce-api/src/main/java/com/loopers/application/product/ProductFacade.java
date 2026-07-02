@@ -1,7 +1,9 @@
 package com.loopers.application.product;
 
+import com.loopers.domain.product.event.ProductViewedEvent;
 import com.loopers.domain.product.model.Product;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +14,7 @@ public class ProductFacade {
     private final ProductApplicationService productApplicationService;
     private final ProductCacheRepository productCacheRepository;
     private final ProductListCacheRepository productListCacheRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ProductInfo getProduct(Long productId) {
         ProductDetailCache detail = productCacheRepository.find(productId)
@@ -21,6 +24,7 @@ public class ProductFacade {
                 return loaded;
             });
         int stockQuantity = productApplicationService.getStockQuantity(productId);
+        eventPublisher.publishEvent(new ProductViewedEvent(productId));
         return ProductInfo.of(detail, stockQuantity);
     }
 
