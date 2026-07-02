@@ -41,9 +41,9 @@ class OrderV1ControllerTest {
         @DisplayName("쿠폰 없이 정상 요청이면, 생성된 orderId를 반환한다.")
         @Test
         void returnsOrderId_whenRequestIsValid() {
-            when(orderFacade.createOrder(eq("user1"), any(), eq(null))).thenReturn(42L);
+            when(orderFacade.createOrder(eq("user1"), any(), eq(null), eq(null))).thenReturn(42L);
             OrderV1Dto.CreateRequest request = new OrderV1Dto.CreateRequest(
-                List.of(new OrderV1Dto.CreateRequest.OrderItemDto(1L, 3)), null
+                List.of(new OrderV1Dto.CreateRequest.OrderItemDto(1L, 3)), null, null
             );
 
             var result = orderV1Controller.createOrder("user1", request);
@@ -54,10 +54,10 @@ class OrderV1ControllerTest {
         @DisplayName("존재하지 않는 회원이면, NOT_FOUND 예외가 전파된다.")
         @Test
         void propagatesNotFound_whenMemberDoesNotExist() {
-            when(orderFacade.createOrder(eq("unknown"), any(), any()))
+            when(orderFacade.createOrder(eq("unknown"), any(), any(), any()))
                 .thenThrow(new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 회원입니다."));
             OrderV1Dto.CreateRequest request = new OrderV1Dto.CreateRequest(
-                List.of(new OrderV1Dto.CreateRequest.OrderItemDto(1L, 1)), null
+                List.of(new OrderV1Dto.CreateRequest.OrderItemDto(1L, 1)), null, null
             );
 
             CoreException ex = assertThrows(CoreException.class,
@@ -69,10 +69,10 @@ class OrderV1ControllerTest {
         @DisplayName("재고 부족이면, BAD_REQUEST 예외가 전파된다.")
         @Test
         void propagatesBadRequest_whenStockIsInsufficient() {
-            when(orderFacade.createOrder(eq("user1"), any(), any()))
+            when(orderFacade.createOrder(eq("user1"), any(), any(), any()))
                 .thenThrow(new CoreException(ErrorType.BAD_REQUEST, "재고가 부족한 상품이 있습니다."));
             OrderV1Dto.CreateRequest request = new OrderV1Dto.CreateRequest(
-                List.of(new OrderV1Dto.CreateRequest.OrderItemDto(1L, 999)), null
+                List.of(new OrderV1Dto.CreateRequest.OrderItemDto(1L, 999)), null, null
             );
 
             CoreException ex = assertThrows(CoreException.class,

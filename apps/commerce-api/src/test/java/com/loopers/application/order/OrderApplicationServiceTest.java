@@ -69,7 +69,8 @@ class OrderApplicationServiceTest {
         orderApplicationService = new OrderApplicationService(
             memberService, productRepository, brandRepository,
             stockRepository, orderRepository, orderItemRepository, orderItemSnapshotRepository,
-            issuedCouponRepository, couponTemplateRepository
+            issuedCouponRepository, couponTemplateRepository,
+            mock(org.springframework.context.ApplicationEventPublisher.class)
         );
     }
 

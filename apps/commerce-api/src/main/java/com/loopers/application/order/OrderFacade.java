@@ -17,6 +17,10 @@ public class OrderFacade {
         return orderApplicationService.createOrder(loginId, items, issuedCouponId);
     }
 
+    public Long createOrder(String loginId, List<OrderItemRequest> items, Long issuedCouponId, PaymentMethod paymentMethod) {
+        return orderApplicationService.createOrder(loginId, items, issuedCouponId, paymentMethod);
+    }
+
     public Page<OrderSummary> getOrders(String loginId, ZonedDateTime startAt, ZonedDateTime endAt, int page, int size) {
         return orderApplicationService.getOrders(loginId, startAt, endAt, page, size);
     }

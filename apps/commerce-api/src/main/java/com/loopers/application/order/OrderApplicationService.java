@@ -8,6 +8,7 @@ import com.loopers.domain.coupon.repository.CouponTemplateRepository;
 import com.loopers.domain.coupon.repository.IssuedCouponRepository;
 import com.loopers.domain.member.model.Member;
 import com.loopers.domain.member.service.MemberService;
+import com.loopers.domain.order.event.OrderCreatedEvent;
 import com.loopers.domain.order.model.Order;
 import com.loopers.domain.order.model.OrderItem;
 import com.loopers.domain.order.model.OrderItemSnapshot;
@@ -21,6 +22,7 @@ import com.loopers.domain.stock.repository.StockRepository;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -45,9 +47,15 @@ public class OrderApplicationService {
     private final OrderItemSnapshotRepository orderItemSnapshotRepository;
     private final IssuedCouponRepository issuedCouponRepository;
     private final CouponTemplateRepository couponTemplateRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public Long  createOrder(String loginId, List<OrderItemRequest> items, Long issuedCouponId) {
+    public Long createOrder(String loginId, List<OrderItemRequest> items, Long issuedCouponId) {
+        return createOrder(loginId, items, issuedCouponId, null);
+    }
+
+    @Transactional
+    public Long createOrder(String loginId, List<OrderItemRequest> items, Long issuedCouponId, PaymentMethod paymentMethod) {
         // 1. 회원 조회
         Member member = memberService.getMember(loginId);
 
@@ -135,6 +143,14 @@ public class OrderApplicationService {
             })
             .toList();
         orderItemSnapshotRepository.saveAll(snapshots);
+
+        // 11. 주문 생성 이벤트 발행 (커밋 이후 결제 요청 등 후속 처리)
+        eventPublisher.publishEvent(new OrderCreatedEvent(
+            savedOrder.getId(),
+            loginId,
+            paymentMethod != null ? paymentMethod.cardType() : null,
+            paymentMethod != null ? paymentMethod.cardNo() : null
+        ));
 
         return savedOrder.getId();
     }

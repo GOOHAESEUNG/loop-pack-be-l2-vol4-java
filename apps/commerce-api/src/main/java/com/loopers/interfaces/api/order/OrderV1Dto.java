@@ -3,14 +3,16 @@ package com.loopers.interfaces.api.order;
 import com.loopers.application.order.OrderDetail;
 import com.loopers.application.order.OrderSummary;
 import com.loopers.domain.order.model.OrderItemStatus;
+import com.loopers.domain.payment.model.CardType;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 
 public class OrderV1Dto {
 
-    public record CreateRequest(List<OrderItemDto> items, Long couponId) {
+    public record CreateRequest(List<OrderItemDto> items, Long couponId, PaymentDto payment) {
         public record OrderItemDto(Long productId, int quantity) {}
+        public record PaymentDto(CardType cardType, String cardNo) {}
     }
 
     public record CreateResponse(Long orderId) {}

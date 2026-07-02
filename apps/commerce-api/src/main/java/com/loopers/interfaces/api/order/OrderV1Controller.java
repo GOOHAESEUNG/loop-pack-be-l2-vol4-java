@@ -4,6 +4,7 @@ import com.loopers.application.order.OrderDetail;
 import com.loopers.application.order.OrderFacade;
 import com.loopers.application.order.OrderItemRequest;
 import com.loopers.application.order.OrderSummary;
+import com.loopers.application.order.PaymentMethod;
 import com.loopers.interfaces.api.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,7 +39,10 @@ public class OrderV1Controller {
         List<OrderItemRequest> items = request.items().stream()
             .map(item -> new OrderItemRequest(item.productId(), item.quantity()))
             .toList();
-        Long orderId = orderFacade.createOrder(loginId, items, request.couponId());
+        PaymentMethod paymentMethod = request.payment() != null
+            ? new PaymentMethod(request.payment().cardType(), request.payment().cardNo())
+            : null;
+        Long orderId = orderFacade.createOrder(loginId, items, request.couponId(), paymentMethod);
         return ApiResponse.success(new OrderV1Dto.CreateResponse(orderId));
     }
 
