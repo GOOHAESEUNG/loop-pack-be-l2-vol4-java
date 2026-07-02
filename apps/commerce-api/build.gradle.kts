@@ -2,6 +2,7 @@ dependencies {
     // add-ons
     implementation(project(":modules:jpa"))
     implementation(project(":modules:redis"))
+    implementation(project(":modules:kafka"))
     implementation(project(":supports:jackson"))
     implementation(project(":supports:logging"))
     implementation(project(":supports:monitoring"))
@@ -32,6 +33,7 @@ dependencies {
     // test-fixtures
     testImplementation(testFixtures(project(":modules:jpa")))
     testImplementation(testFixtures(project(":modules:redis")))
+    testImplementation(testFixtures(project(":modules:kafka")))
 
     // 비동기 이벤트 검증 (최종 일관성 대기)
     testImplementation("org.awaitility:awaitility")

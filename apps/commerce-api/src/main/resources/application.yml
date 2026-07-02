@@ -21,6 +21,7 @@ spring:
     import:
       - jpa.yml
       - redis.yml
+      - kafka.yml
       - logging.yml
       - monitoring.yml
 
@@ -54,6 +55,11 @@ spring:
   config:
     activate:
       on-profile: local, test
+  kafka:
+    admin:
+      properties:
+        # 호스트에서 실행 시 docker 내부 호스트명(kafka:9092) 대신 외부 리스너를 사용
+        bootstrap.servers: ${spring.kafka.bootstrap-servers}
 
 ---
 spring:

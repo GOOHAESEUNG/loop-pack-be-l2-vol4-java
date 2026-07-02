@@ -149,7 +149,10 @@ public class OrderApplicationService {
             savedOrder.getId(),
             loginId,
             paymentMethod != null ? paymentMethod.cardType() : null,
-            paymentMethod != null ? paymentMethod.cardNo() : null
+            paymentMethod != null ? paymentMethod.cardNo() : null,
+            items.stream()
+                .map(item -> new OrderCreatedEvent.Item(item.productId(), item.quantity()))
+                .toList()
         ));
 
         return savedOrder.getId();
