@@ -1,5 +1,7 @@
 package com.loopers.application.like;
 
+import com.loopers.domain.like.event.LikeAddedEvent;
+import com.loopers.domain.like.event.LikeRemovedEvent;
 import com.loopers.domain.like.service.LikeDomainService;
 import com.loopers.domain.product.model.Product;
 import com.loopers.domain.product.repository.ProductRepository;
@@ -9,11 +11,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
@@ -21,41 +25,43 @@ class LikeApplicationServiceTest {
 
     private LikeDomainService likeDomainService;
     private ProductRepository productRepository;
+    private ApplicationEventPublisher eventPublisher;
     private LikeApplicationService likeApplicationService;
 
     @BeforeEach
     void setUp() {
         likeDomainService = mock(LikeDomainService.class);
         productRepository = mock(ProductRepository.class);
-        likeApplicationService = new LikeApplicationService(likeDomainService, productRepository);
+        eventPublisher = mock(ApplicationEventPublisher.class);
+        likeApplicationService = new LikeApplicationService(likeDomainService, productRepository, eventPublisher);
     }
 
     @DisplayName("좋아요를 등록할 때, ")
     @Nested
     class AddLike {
 
-        @DisplayName("상품이 존재하고 좋아요가 없으면, incrementLikeCount가 호출된다.")
+        @DisplayName("상품이 존재하고 좋아요가 없으면, LikeAddedEvent가 발행된다.")
         @Test
-        void callsIncrementLikeCount_whenLikeIsNew() {
+        void publishesLikeAddedEvent_whenLikeIsNew() {
             Product product = Product.create(1L, "에어맥스", "운동화", 100_000L);
             when(productRepository.findById(2L)).thenReturn(Optional.of(product));
             when(likeDomainService.addLike(1L, 2L)).thenReturn(true);
 
             likeApplicationService.addLike(1L, 2L);
 
-            verify(productRepository).incrementLikeCount(2L);
+            verify(eventPublisher).publishEvent(new LikeAddedEvent(2L));
         }
 
-        @DisplayName("이미 좋아요가 존재하면, incrementLikeCount가 호출되지 않는다.")
+        @DisplayName("이미 좋아요가 존재하면, 이벤트가 발행되지 않는다.")
         @Test
-        void doesNotCallIncrement_whenLikeAlreadyExists() {
+        void doesNotPublishEvent_whenLikeAlreadyExists() {
             Product product = Product.create(1L, "에어맥스", "운동화", 100_000L);
             when(productRepository.findById(2L)).thenReturn(Optional.of(product));
             when(likeDomainService.addLike(1L, 2L)).thenReturn(false);
 
             likeApplicationService.addLike(1L, 2L);
 
-            verify(productRepository, never()).incrementLikeCount(anyLong());
+            verify(eventPublisher, never()).publishEvent(any());
         }
 
         @DisplayName("상품이 존재하지 않으면, NOT_FOUND 예외가 발생한다.")
@@ -76,28 +82,28 @@ class LikeApplicationServiceTest {
     @Nested
     class RemoveLike {
 
-        @DisplayName("상품이 존재하고 좋아요가 있으면, decrementLikeCount가 호출된다.")
+        @DisplayName("상품이 존재하고 좋아요가 있으면, LikeRemovedEvent가 발행된다.")
         @Test
-        void callsDecrementLikeCount_whenLikeExists() {
+        void publishesLikeRemovedEvent_whenLikeExists() {
             Product product = Product.create(1L, "에어맥스", "운동화", 100_000L);
             when(productRepository.findById(2L)).thenReturn(Optional.of(product));
             when(likeDomainService.removeLike(1L, 2L)).thenReturn(true);
 
             likeApplicationService.removeLike(1L, 2L);
 
-            verify(productRepository).decrementLikeCount(2L);
+            verify(eventPublisher).publishEvent(new LikeRemovedEvent(2L));
         }
 
-        @DisplayName("좋아요가 존재하지 않으면, decrementLikeCount가 호출되지 않는다.")
+        @DisplayName("좋아요가 존재하지 않으면, 이벤트가 발행되지 않는다.")
         @Test
-        void doesNotCallDecrement_whenLikeDoesNotExist() {
+        void doesNotPublishEvent_whenLikeDoesNotExist() {
             Product product = Product.create(1L, "에어맥스", "운동화", 100_000L);
             when(productRepository.findById(2L)).thenReturn(Optional.of(product));
             when(likeDomainService.removeLike(1L, 2L)).thenReturn(false);
 
             likeApplicationService.removeLike(1L, 2L);
 
-            verify(productRepository, never()).decrementLikeCount(anyLong());
+            verify(eventPublisher, never()).publishEvent(any());
         }
 
         @DisplayName("상품이 존재하지 않으면, NOT_FOUND 예외가 발생한다.")

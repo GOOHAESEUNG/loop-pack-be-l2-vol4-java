@@ -1,10 +1,13 @@
 package com.loopers.application.like;
 
+import com.loopers.domain.like.event.LikeAddedEvent;
+import com.loopers.domain.like.event.LikeRemovedEvent;
 import com.loopers.domain.like.service.LikeDomainService;
 import com.loopers.domain.product.repository.ProductRepository;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +17,7 @@ public class LikeApplicationService {
 
     private final LikeDomainService likeDomainService;
     private final ProductRepository productRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void addLike(Long memberId, Long productId) {
@@ -23,7 +27,7 @@ public class LikeApplicationService {
 
         boolean added = likeDomainService.addLike(memberId, productId);
         if (added) {
-            productRepository.incrementLikeCount(productId);
+            eventPublisher.publishEvent(new LikeAddedEvent(productId));
         }
     }
 
@@ -35,7 +39,7 @@ public class LikeApplicationService {
 
         boolean removed = likeDomainService.removeLike(memberId, productId);
         if (removed) {
-            productRepository.decrementLikeCount(productId);
+            eventPublisher.publishEvent(new LikeRemovedEvent(productId));
         }
     }
 }

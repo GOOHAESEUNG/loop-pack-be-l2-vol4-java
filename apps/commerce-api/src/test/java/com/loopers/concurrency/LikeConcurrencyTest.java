@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -25,6 +26,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 class LikeConcurrencyTest {
@@ -96,8 +98,10 @@ class LikeConcurrencyTest {
         doneLatch.await();
         executor.shutdown();
 
-        Product updated = productRepository.findById(product.getId()).orElseThrow();
-        assertThat(updated.getLikeCount()).isEqualTo(successCount.get());
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            Product updated = productRepository.findById(product.getId()).orElseThrow();
+            assertThat(updated.getLikeCount()).isEqualTo(successCount.get());
+        });
     }
 
     @DisplayName("30명이 좋아요를 누른 상품에 동시에 취소 요청해도, likeCount가 0 미만으로 떨어지지 않는다.")
@@ -132,8 +136,10 @@ class LikeConcurrencyTest {
         doneLatch.await();
         executor.shutdown();
 
-        Product updated = productRepository.findById(product.getId()).orElseThrow();
-        assertThat(updated.getLikeCount()).isGreaterThanOrEqualTo(0);
-        assertThat(updated.getLikeCount()).isEqualTo(30 - successCount.get());
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            Product updated = productRepository.findById(product.getId()).orElseThrow();
+            assertThat(updated.getLikeCount()).isGreaterThanOrEqualTo(0);
+            assertThat(updated.getLikeCount()).isEqualTo(30 - successCount.get());
+        });
     }
 }

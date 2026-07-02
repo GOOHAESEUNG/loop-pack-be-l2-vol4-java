@@ -32,4 +32,7 @@ dependencies {
     // test-fixtures
     testImplementation(testFixtures(project(":modules:jpa")))
     testImplementation(testFixtures(project(":modules:redis")))
+
+    // 비동기 이벤트 검증 (최종 일관성 대기)
+    testImplementation("org.awaitility:awaitility")
 }
