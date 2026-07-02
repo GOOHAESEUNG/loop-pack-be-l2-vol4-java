@@ -14,7 +14,7 @@ spring:
   main:
     web-application-type: servlet
   application:
-    name: commerce-api
+    name: commerce-streamer
   profiles:
     active: local
   config:
@@ -24,6 +24,12 @@ spring:
       - kafka.yml
       - logging.yml
       - monitoring.yml
+  kafka:
+    consumer:
+      properties:
+        auto:
+          # 집계 컨슈머는 그룹 최초 기동 시 과거 이벤트부터 소비한다 (유실 방지)
+          offset.reset: earliest
 
 demo-kafka:
   test:

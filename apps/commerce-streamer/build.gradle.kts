@@ -20,4 +20,7 @@ dependencies {
     testImplementation(testFixtures(project(":modules:jpa")))
     testImplementation(testFixtures(project(":modules:redis")))
     testImplementation(testFixtures(project(":modules:kafka")))
+
+    // 비동기 소비 검증 (최종 일관성 대기)
+    testImplementation("org.awaitility:awaitility")
 }
