@@ -3,6 +3,7 @@ package com.loopers.application.outbox;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.loopers.domain.coupon.event.CouponIssueRequestedEvent;
 import com.loopers.domain.like.event.LikeAddedEvent;
 import com.loopers.domain.like.event.LikeRemovedEvent;
 import com.loopers.domain.order.event.OrderCreatedEvent;
@@ -65,9 +66,22 @@ public class OutboxEventRecorder {
         save(KafkaTopicsConfig.ORDER_EVENTS, String.valueOf(event.orderId()), "ORDER_CREATED", payload);
     }
 
-    private void save(String topic, String partitionKey, String eventType, ObjectNode payload) {
-        String eventId = UUID.randomUUID().toString();
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    public void record(CouponIssueRequestedEvent event) {
+        ObjectNode payload = objectMapper.createObjectNode();
+        payload.put("requestId", event.requestId());
+        payload.put("memberId", event.memberId());
+        payload.put("couponTemplateId", event.couponTemplateId());
+        // requestId를 eventId로 사용해 Consumer 멱등 처리의 자연 키가 되게 한다
+        save(event.requestId(), KafkaTopicsConfig.COUPON_ISSUE_REQUESTS,
+            String.valueOf(event.couponTemplateId()), "COUPON_ISSUE_REQUESTED", payload);
+    }
 
+    private void save(String topic, String partitionKey, String eventType, ObjectNode payload) {
+        save(UUID.randomUUID().toString(), topic, partitionKey, eventType, payload);
+    }
+
+    private void save(String eventId, String topic, String partitionKey, String eventType, ObjectNode payload) {
         ObjectNode envelope = objectMapper.createObjectNode();
         envelope.put("eventId", eventId);
         envelope.put("eventType", eventType);

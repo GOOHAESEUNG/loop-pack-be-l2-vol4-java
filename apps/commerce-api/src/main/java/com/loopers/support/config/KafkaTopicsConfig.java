@@ -10,6 +10,7 @@ public class KafkaTopicsConfig {
 
     public static final String CATALOG_EVENTS = "catalog-events";
     public static final String ORDER_EVENTS = "order-events";
+    public static final String COUPON_ISSUE_REQUESTS = "coupon-issue-requests";
 
     @Bean
     public NewTopic catalogEvents() {
@@ -19,5 +20,10 @@ public class KafkaTopicsConfig {
     @Bean
     public NewTopic orderEvents() {
         return TopicBuilder.name(ORDER_EVENTS).partitions(3).replicas(1).build();
+    }
+
+    @Bean
+    public NewTopic couponIssueRequests() {
+        return TopicBuilder.name(COUPON_ISSUE_REQUESTS).partitions(3).replicas(1).build();
     }
 }

@@ -37,7 +37,11 @@ class CouponApplicationServiceTest {
         memberService = mock(MemberService.class);
         couponTemplateRepository = mock(CouponTemplateRepository.class);
         issuedCouponRepository = mock(IssuedCouponRepository.class);
-        couponApplicationService = new CouponApplicationService(memberService, couponTemplateRepository, issuedCouponRepository);
+        couponApplicationService = new CouponApplicationService(
+            memberService, couponTemplateRepository, issuedCouponRepository,
+            mock(com.loopers.domain.coupon.repository.CouponIssueRequestRepository.class),
+            mock(org.springframework.context.ApplicationEventPublisher.class)
+        );
     }
 
     @DisplayName("쿠폰 발급 요청 시, ")

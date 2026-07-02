@@ -10,6 +10,18 @@ import java.time.ZonedDateTime;
 
 public class CouponV1Dto {
 
+    public record IssueRequestResponse(String requestId) {}
+
+    public record IssueRequestStatusResponse(
+        String requestId,
+        String status,
+        String reason
+    ) {
+        public static IssueRequestStatusResponse from(com.loopers.application.coupon.CouponIssueRequestInfo info) {
+            return new IssueRequestStatusResponse(info.requestId(), info.status().name(), info.reason());
+        }
+    }
+
     // ADMIN
     public record TemplateCreateRequest(
         String name,

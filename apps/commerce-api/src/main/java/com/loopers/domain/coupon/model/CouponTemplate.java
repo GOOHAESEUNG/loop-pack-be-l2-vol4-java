@@ -35,19 +35,38 @@ public class CouponTemplate extends BaseEntity {
     @Column(name = "expired_at", nullable = false)
     private ZonedDateTime expiredAt;
 
+    /**
+     * 선착순 발급 총 수량. null이면 무제한.
+     * issuedQuantity 증가는 발급 Consumer(commerce-streamer)가 원자적 UPDATE로 수행한다.
+     */
+    @Column(name = "total_quantity")
+    private Long totalQuantity;
+
+    @Column(name = "issued_quantity", nullable = false)
+    private long issuedQuantity;
+
     protected CouponTemplate() {}
 
-    private CouponTemplate(String name, CouponType type, Long value, Long minOrderAmount, ZonedDateTime expiredAt) {
+    private CouponTemplate(String name, CouponType type, Long value, Long minOrderAmount, ZonedDateTime expiredAt, Long totalQuantity) {
         validate(name, type, value, expiredAt);
+        if (totalQuantity != null && totalQuantity <= 0) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "발급 수량은 0보다 커야 합니다.");
+        }
         this.name = name;
         this.type = type;
         this.value = value;
         this.minOrderAmount = minOrderAmount;
         this.expiredAt = expiredAt;
+        this.totalQuantity = totalQuantity;
+        this.issuedQuantity = 0L;
     }
 
     public static CouponTemplate create(String name, CouponType type, Long value, Long minOrderAmount, ZonedDateTime expiredAt) {
-        return new CouponTemplate(name, type, value, minOrderAmount, expiredAt);
+        return new CouponTemplate(name, type, value, minOrderAmount, expiredAt, null);
+    }
+
+    public static CouponTemplate create(String name, CouponType type, Long value, Long minOrderAmount, ZonedDateTime expiredAt, Long totalQuantity) {
+        return new CouponTemplate(name, type, value, minOrderAmount, expiredAt, totalQuantity);
     }
 
     public void update(String name, CouponType type, Long value, Long minOrderAmount, ZonedDateTime expiredAt) {
