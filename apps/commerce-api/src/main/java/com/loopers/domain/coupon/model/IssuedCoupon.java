@@ -62,7 +62,7 @@ public class IssuedCoupon extends BaseEntity {
     public void expire() {
         this.status = CouponStatus.EXPIRED;
     }
-
+  
     public void cancel() {
         if (status == CouponStatus.USED) {
             this.status = CouponStatus.AVAILABLE;
