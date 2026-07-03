@@ -1,40 +1,51 @@
 package com.loopers.application.product;
 
-import com.loopers.domain.product.ProductModel;
-import com.loopers.domain.product.ProductService;
+import com.loopers.domain.product.model.Product;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @Component
 public class ProductFacade {
-    private final ProductService productService;
 
-    public ProductInfo createProduct(String name, String description, Long price, Integer stock) {
-        ProductModel product = productService.createProduct(name, description, price, stock);
+    private final ProductApplicationService productApplicationService;
+    private final ProductCacheRepository productCacheRepository;
+    private final ProductListCacheRepository productListCacheRepository;
+
+    public ProductInfo getProduct(Long productId) {
+        ProductDetailCache detail = productCacheRepository.find(productId)
+            .orElseGet(() -> {
+                ProductDetailCache loaded = productApplicationService.getProductDetailForCache(productId);
+                productCacheRepository.save(productId, loaded);
+                return loaded;
+            });
+        int stockQuantity = productApplicationService.getStockQuantity(productId);
+        return ProductInfo.of(detail, stockQuantity);
+    }
+
+    public Page<ProductInfo> getProducts(Long brandId, String sort, int page, int size) {
+        return productListCacheRepository.find(brandId, sort, page, size)
+            .map(ProductListCache::toPage)
+            .orElseGet(() -> {
+                Page<ProductInfo> result = productApplicationService.getProducts(brandId, ProductSort.from(sort), page, size);
+                productListCacheRepository.save(brandId, sort, page, size, ProductListCache.from(result));
+                return result;
+            });
+    }
+
+    public ProductInfo createProduct(Long brandId, String name, String description, Long price, int initialQuantity) {
+        Product product = productApplicationService.createProduct(brandId, name, description, price, initialQuantity);
         return ProductInfo.from(product);
     }
 
-    public ProductInfo getProduct(Long id) {
-        ProductModel product = productService.getProduct(id);
-        return ProductInfo.from(product);
+    public void updateProduct(Long productId, String name, String description, Long price) {
+        productApplicationService.updateProduct(productId, name, description, price);
+        productCacheRepository.evict(productId);
     }
 
-    public List<ProductInfo> getAllProducts() {
-        List<ProductModel> products = productService.getAllProducts();
-        return products.stream()
-            .map(ProductInfo::from)
-            .toList();
-    }
-
-    public ProductInfo updateProduct(Long id, String name, String description, Long price, Integer stock) {
-        ProductModel product = productService.updateProduct(id, name, description, price, stock);
-        return ProductInfo.from(product);
-    }
-
-    public void deleteProduct(Long id) {
-        productService.deleteProduct(id);
+    public void deleteProduct(Long productId) {
+        productApplicationService.deleteProduct(productId);
+        productCacheRepository.evict(productId);
     }
 }
